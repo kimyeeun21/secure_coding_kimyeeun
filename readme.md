@@ -13,17 +13,3 @@ git clone https://github.com/ugonfor/secure-coding
 conda env create -f enviroments.yaml
 ```
 
-## usage
-
-run the server process.
-
-```
-python app.py
-```
-
-if you want to test on external machine, you can utilize the ngrok to forwarding the url.
-```
-# optional
-sudo snap install ngrok
-ngrok http 5000
-```
