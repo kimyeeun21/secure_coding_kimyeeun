@@ -1,5 +1,6 @@
 import sqlite3
 import uuid
+import bcrypt
 from flask import Flask, render_template, request, redirect, url_for, session, flash, g
 from flask_socketio import SocketIO, send
 
@@ -70,16 +71,18 @@ def register():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
+        hashed_pw = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()) # 비밀번호 해시해서 저장장
+
         db = get_db()
         cursor = db.cursor()
-        # 중복 사용자 체크
         cursor.execute("SELECT * FROM user WHERE username = ?", (username,))
         if cursor.fetchone() is not None:
             flash('이미 존재하는 사용자명입니다.')
             return redirect(url_for('register'))
+
         user_id = str(uuid.uuid4())
         cursor.execute("INSERT INTO user (id, username, password) VALUES (?, ?, ?)",
-                       (user_id, username, password))
+                       (user_id, username, hashed_pw))
         db.commit()
         flash('회원가입이 완료되었습니다. 로그인 해주세요.')
         return redirect(url_for('login'))
@@ -91,11 +94,13 @@ def login():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
+
         db = get_db()
         cursor = db.cursor()
-        cursor.execute("SELECT * FROM user WHERE username = ? AND password = ?", (username, password))
+        cursor.execute("SELECT * FROM user WHERE username = ?", (username,))
         user = cursor.fetchone()
-        if user:
+
+        if user and bcrypt.checkpw(password.encode('utf-8'), user['password']): # 해시된 비밀번호 확인
             session['user_id'] = user['id']
             flash('로그인 성공!')
             return redirect(url_for('dashboard'))
@@ -125,6 +130,84 @@ def dashboard():
     cursor.execute("SELECT * FROM product")
     all_products = cursor.fetchall()
     return render_template('dashboard.html', products=all_products, user=current_user)
+
+# 검색기능
+@app.route('/search')
+def search():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    query = request.args.get('query', '')
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("SELECT * FROM user WHERE id = ?", (session['user_id'],))
+    current_user = cursor.fetchone()
+
+    cursor.execute(
+        "SELECT * FROM product WHERE title LIKE ? OR description LIKE ?",
+        (f'%{query}%', f'%{query}%')
+    )
+    results = cursor.fetchall()
+
+    return render_template('search_results.html', products=results, user=current_user, query=query)
+
+# 상품 수정 기능
+@app.route('/product/<product_id>/edit', methods=['GET', 'POST'])
+def edit_product(product_id):
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("SELECT * FROM product WHERE id = ?", (product_id,))
+    product = cursor.fetchone()
+
+    if not product or product['seller_id'] != session['user_id']:
+        flash('수정할 수 없는 상품입니다.')
+        return redirect(url_for('dashboard'))
+
+    if request.method == 'POST':
+        title = request.form['title']
+        description = request.form['description']
+        price = request.form['price']
+
+        cursor.execute(
+            "UPDATE product SET title = ?, description = ?, price = ? WHERE id = ?",
+            (title, description, price, product_id)
+        )
+        db.commit()
+        flash('상품이 수정되었습니다.')
+        return redirect(url_for('view_product', product_id=product_id))
+
+    return render_template('edit_product.html', product=product)
+
+# 상품 삭제 기능
+@app.route('/product/<product_id>/delete', methods=['POST'])
+def delete_product(product_id):
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    db = get_db()
+    cursor = db.cursor()
+
+    # 삭제할 상품이 현재 로그인한 사용자의 것인지 확인
+    cursor.execute("SELECT * FROM product WHERE id = ?", (product_id,))
+    product = cursor.fetchone()
+
+    if not product:
+        flash('존재하지 않는 상품입니다.')
+        return redirect(url_for('dashboard'))
+
+    if product['seller_id'] != session['user_id']:
+        flash('해당 상품을 삭제할 권한이 없습니다.')
+        return redirect(url_for('dashboard'))
+
+    # 삭제 수행
+    cursor.execute("DELETE FROM product WHERE id = ?", (product_id,))
+    db.commit()
+    flash('상품이 삭제되었습니다.')
+    return redirect(url_for('dashboard'))
+
 
 # 프로필 페이지: bio 업데이트 가능
 @app.route('/profile', methods=['GET', 'POST'])
@@ -167,17 +250,34 @@ def new_product():
 # 상품 상세보기
 @app.route('/product/<product_id>')
 def view_product(product_id):
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
     db = get_db()
     cursor = db.cursor()
+
+    # 상품 정보 가져오기
     cursor.execute("SELECT * FROM product WHERE id = ?", (product_id,))
     product = cursor.fetchone()
     if not product:
         flash('상품을 찾을 수 없습니다.')
         return redirect(url_for('dashboard'))
-    # 판매자 정보 조회
+
+    # 판매자 정보 가져오기
     cursor.execute("SELECT * FROM user WHERE id = ?", (product['seller_id'],))
     seller = cursor.fetchone()
-    return render_template('view_product.html', product=product, seller=seller)
+
+    # 현재 로그인한 사용자 정보
+    cursor.execute("SELECT * FROM user WHERE id = ?", (session['user_id'],))
+    current_user = cursor.fetchone()
+
+    return render_template(
+        'view_product.html',
+        product=product,
+        seller=seller,
+        user=current_user  # ← 템플릿에서 user.id 등 쓸 수 있게 넘겨줌
+    )
+
 
 # 신고하기
 @app.route('/report', methods=['GET', 'POST'])
