@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}사용자 목록{% endblock %}
+{% block content %}
+<h2>사용자 목록</h2>
+<ul>
+  {% for u in users %}
+    <li>
+      {{ u.username }}
+      <form action="{{ url_for('private_chat', receiver_id=u.id) }}" method="get" style="display:inline;">
+        <button type="submit" style="padding: 4px 8px; font-size: 0.8em; background-color: #4a90e2; color: white; 
+                                    border: none; border-radius: 4px; cursor: pointer; width: auto;">
+          채팅하기
+        </button>
+      </form>
+    </li>
+  {% endfor %}
+</ul>
+<p><a href="{{ url_for('dashboard') }}">← 대시보드로 돌아가기</a></p>
+{% endblock %}

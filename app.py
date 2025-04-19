@@ -56,6 +56,16 @@ def init_db():
                 reason TEXT NOT NULL
             )
         """)
+       # 1대1 채팅 테이블 생성
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS private_message (
+                id TEXT PRIMARY KEY,
+                sender_id TEXT NOT NULL,
+                receiver_id TEXT NOT NULL,
+                message TEXT NOT NULL,
+                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
         db.commit()
 
 # 기본 라우트
@@ -226,6 +236,24 @@ def profile():
     current_user = cursor.fetchone()
     return render_template('profile.html', user=current_user)
 
+# 사용자 목록 페이지
+@app.route('/users')
+def user_list():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("SELECT * FROM user WHERE id != ?", (session['user_id'],))
+    users = cursor.fetchall()
+
+    cursor.execute("SELECT * FROM user WHERE id = ?", (session['user_id'],))
+    current_user = cursor.fetchone()
+
+    return render_template('user_list.html', users=users, user=current_user)
+
+
+
 # 상품 등록
 @app.route('/product/new', methods=['GET', 'POST'])
 def new_product():
@@ -278,6 +306,42 @@ def view_product(product_id):
         user=current_user  # ← 템플릿에서 user.id 등 쓸 수 있게 넘겨줌
     )
 
+# 1대1 채팅 페이지
+@app.route('/chat/<receiver_id>', methods=['GET', 'POST'])
+def private_chat(receiver_id):
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    db = get_db()
+    cursor = db.cursor()
+
+    sender_id = session['user_id']
+
+    # 메시지 전송 처리
+    if request.method == 'POST':
+        message = request.form['message']
+        message_id = str(uuid.uuid4())
+        cursor.execute("""
+            INSERT INTO private_message (id, sender_id, receiver_id, message)
+            VALUES (?, ?, ?, ?)
+        """, (message_id, sender_id, receiver_id, message))
+        db.commit()
+        return redirect(url_for('private_chat', receiver_id=receiver_id))
+
+    # 채팅 내역 조회 (양방향 모두 포함)
+    cursor.execute("""
+        SELECT * FROM private_message
+        WHERE (sender_id = ? AND receiver_id = ?)
+           OR (sender_id = ? AND receiver_id = ?)
+        ORDER BY timestamp ASC
+    """, (sender_id, receiver_id, receiver_id, sender_id))
+    messages = cursor.fetchall()
+
+    # 상대방 이름 표시용
+    cursor.execute("SELECT username FROM user WHERE id = ?", (receiver_id,))
+    receiver = cursor.fetchone()
+
+    return render_template('private_chat.html', messages=messages, receiver=receiver)
 
 # 신고하기
 @app.route('/report', methods=['GET', 'POST'])
