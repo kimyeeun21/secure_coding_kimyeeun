@@ -224,17 +224,35 @@ def delete_product(product_id):
 def profile():
     if 'user_id' not in session:
         return redirect(url_for('login'))
+    
     db = get_db()
     cursor = db.cursor()
+
     if request.method == 'POST':
         bio = request.form.get('bio', '')
+        current_password = request.form.get('current_password')
+        new_password = request.form.get('new_password')
+
+        if current_password and new_password:
+            # 현재 비밀번호 확인
+            cursor.execute("SELECT * FROM user WHERE id = ?", (session['user_id'],))
+            user = cursor.fetchone()
+
+            if bcrypt.checkpw(current_password.encode('utf-8'), user['password']):
+                hashed_pw = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt())
+                cursor.execute("UPDATE user SET password = ? WHERE id = ?", (hashed_pw, session['user_id']))
+                flash('비밀번호가 변경되었습니다.')
+            else:
+                flash('현재 비밀번호가 올바르지 않습니다.')
+
+        # 소개글 업데이트
         cursor.execute("UPDATE user SET bio = ? WHERE id = ?", (bio, session['user_id']))
         db.commit()
-        flash('프로필이 업데이트되었습니다.')
         return redirect(url_for('profile'))
+
     cursor.execute("SELECT * FROM user WHERE id = ?", (session['user_id'],))
-    current_user = cursor.fetchone()
-    return render_template('profile.html', user=current_user)
+    user = cursor.fetchone()
+    return render_template('profile.html', user=user)
 
 # 사용자 목록 페이지
 @app.route('/users')
@@ -348,20 +366,25 @@ def private_chat(receiver_id):
 def report():
     if 'user_id' not in session:
         return redirect(url_for('login'))
+
     if request.method == 'POST':
+        report_type = request.form['type']
         target_id = request.form['target_id']
         reason = request.form['reason']
         db = get_db()
         cursor = db.cursor()
         report_id = str(uuid.uuid4())
+
         cursor.execute(
             "INSERT INTO report (id, reporter_id, target_id, reason) VALUES (?, ?, ?, ?)",
-            (report_id, session['user_id'], target_id, reason)
+            (report_id, session['user_id'], target_id, f"{report_type}:{reason}")
         )
         db.commit()
         flash('신고가 접수되었습니다.')
         return redirect(url_for('dashboard'))
+
     return render_template('report.html')
+
 
 # 실시간 채팅: 클라이언트가 메시지를 보내면 전체 브로드캐스트
 @socketio.on('send_message')
