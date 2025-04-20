@@ -34,7 +34,8 @@ def init_db():
                 id TEXT PRIMARY KEY,
                 username TEXT UNIQUE NOT NULL,
                 password TEXT NOT NULL,
-                bio TEXT
+                bio TEXT,
+                is_admin INTEGER DEFAULT 0  -- 관리자 여부 (0: 일반, 1: 관리자)
             )
         """)
         # 상품 테이블 생성
@@ -56,7 +57,7 @@ def init_db():
                 reason TEXT NOT NULL
             )
         """)
-       # 1대1 채팅 테이블 생성
+        # 1대1 채팅 테이블 생성
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS private_message (
                 id TEXT PRIMARY KEY,
@@ -67,6 +68,14 @@ def init_db():
             )
         """)
         db.commit()
+
+# 관리자 여부 확인 함수
+def is_admin():
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("SELECT is_admin FROM user WHERE id = ?", (session['user_id'],))
+    user = cursor.fetchone()
+    return user and user['is_admin'] == 1
 
 # 기본 라우트
 @app.route('/')
@@ -190,6 +199,26 @@ def edit_product(product_id):
         return redirect(url_for('view_product', product_id=product_id))
 
     return render_template('edit_product.html', product=product)
+
+# 신고된 상품 삭제 기능
+@app.route('/admin/delete_product/<product_id>', methods=['POST'])
+def delete_reported_product(product_id):
+    if 'user_id' not in session or not is_admin():
+        flash('관리자만 삭제할 수 있습니다.')
+        return redirect(url_for('dashboard'))
+
+    db = get_db()
+    cursor = db.cursor()
+
+    # 상품 삭제
+    cursor.execute("DELETE FROM product WHERE id = ?", (product_id,))
+    # 해당 상품 관련 신고도 삭제
+    cursor.execute("DELETE FROM report WHERE target_id = ?", (product_id,))
+    db.commit()
+
+    flash('신고된 상품이 삭제되었습니다.')
+    return redirect(url_for('admin_reports'))
+
 
 # 상품 삭제 기능
 @app.route('/product/<product_id>/delete', methods=['POST'])
@@ -323,6 +352,53 @@ def view_product(product_id):
         seller=seller,
         user=current_user  # ← 템플릿에서 user.id 등 쓸 수 있게 넘겨줌
     )
+
+# 관리자 페이지
+@app.route('/admin')
+def admin_home():
+    if 'user_id' not in session or not is_admin():
+        flash("관리자만 접근할 수 있습니다.")
+        return redirect(url_for('dashboard'))
+    return render_template('admin_home.html')
+
+
+# 관리자용 신고 목록 페이지
+@app.route('/admin/reports')
+def admin_reports():
+    if 'user_id' not in session or not is_admin():
+        flash('관리자만 접근할 수 있습니다.')
+        return redirect(url_for('dashboard'))
+
+    db = get_db()
+    cursor = db.cursor()
+
+    # product 관련 신고만 조회 (reason에 'product:' 포함)
+    cursor.execute("""
+        SELECT r.id AS report_id, r.reason, r.target_id AS product_id, p.title
+        FROM report r
+        JOIN product p ON r.target_id = p.id
+        WHERE r.reason LIKE 'product:%'
+    """)
+    reports = cursor.fetchall()
+
+    return render_template('admin_reports.html', reports=reports)
+
+
+# 불량 상품 삭제
+@app.route('/admin/delete_product/<product_id>', methods=['POST'])
+def admin_delete_product(product_id):
+    if 'user_id' not in session or not is_admin():
+        flash('관리자만 상품을 삭제할 수 있습니다.')
+        return redirect(url_for('dashboard'))
+
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("DELETE FROM product WHERE id = ?", (product_id,))
+    cursor.execute("DELETE FROM report WHERE target_id = ?", (product_id,))
+    db.commit()
+    flash('상품이 삭제되었습니다.')
+    return redirect(url_for('admin_reports'))
+
 
 # 1대1 채팅 페이지
 @app.route('/chat/<receiver_id>', methods=['GET', 'POST'])

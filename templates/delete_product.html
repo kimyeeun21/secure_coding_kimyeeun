@@ -1,0 +1,12 @@
+<h2>신고된 상품 목록</h2>
+<ul>
+  {% for r in reports %}
+    <li>
+      {{ r.title }} - 신고사유: {{ r.reason }}
+      <form action="{{ url_for('admin_delete_product', product_id=r.target_id) }}" method="POST" style="display:inline;">
+        <button type="submit" onclick="return confirm('정말 삭제할까요?')">삭제</button>
+      </form>
+    </li>
+  {% endfor %}
+</ul>
+<a href="{{ url_for('dashboard') }}">← 대시보드로 돌아가기</a>
