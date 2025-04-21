@@ -57,6 +57,14 @@ def init_db():
                 reason TEXT NOT NULL
             )
         """)
+        # 사용자 테이블 생성
+        cursor.execute("""
+            SELECT r.id AS report_id, r.reason, r.target_id AS user_id, u.username, u.is_suspended
+                FROM report r
+                JOIN user u ON r.target_id = u.id
+                WHERE r.reason LIKE 'user:%'
+        """)
+
         # 1대1 채팅 테이블 생성
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS private_message (
@@ -64,6 +72,16 @@ def init_db():
                 sender_id TEXT NOT NULL,
                 receiver_id TEXT NOT NULL,
                 message TEXT NOT NULL,
+                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        # 송금 내역 테이블 생성
+        cursor.execute("""
+            CREATE TABLE IF NOT EXISTS transfer (
+                id TEXT PRIMARY KEY,
+                sender_id TEXT NOT NULL,
+                receiver_id TEXT NOT NULL,
+                amount INTEGER NOT NULL,
                 timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
             )
         """)
@@ -76,6 +94,38 @@ def is_admin():
     cursor.execute("SELECT is_admin FROM user WHERE id = ?", (session['user_id'],))
     user = cursor.fetchone()
     return user and user['is_admin'] == 1
+    
+# 유저 간 송금   
+@app.route('/send_money/<receiver_id>', methods=['GET', 'POST'])
+def send_money(receiver_id):
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    sender_id = session['user_id']
+    db = get_db()
+    cursor = db.cursor()
+
+    # 수신자 정보
+    cursor.execute("SELECT * FROM user WHERE id = ?", (receiver_id,))
+    receiver = cursor.fetchone()
+    if not receiver:
+        flash("존재하지 않는 사용자입니다.")
+        return redirect(url_for('user_list'))
+
+    if request.method == 'POST':
+        amount = int(request.form['amount'])
+
+        transfer_id = str(uuid.uuid4())
+        cursor.execute(
+            "INSERT INTO transfer (id, sender_id, receiver_id, amount) VALUES (?, ?, ?, ?)",
+            (transfer_id, sender_id, receiver_id, amount)
+        )
+        db.commit()
+        flash(f"{receiver['username']}님에게 {amount}원을 송금했습니다.")
+        return redirect(url_for('user_list'))
+
+    return render_template('send_money.html', receiver=receiver)
+
 
 # 기본 라우트
 @app.route('/')
@@ -119,14 +169,20 @@ def login():
         cursor.execute("SELECT * FROM user WHERE username = ?", (username,))
         user = cursor.fetchone()
 
-        if user and bcrypt.checkpw(password.encode('utf-8'), user['password']): # 해시된 비밀번호 확인
+        if user and bcrypt.checkpw(password.encode('utf-8'), user['password']):
+            if user['is_suspended']:  # 휴먼처리 
+                flash('이 계정은 관리자에 의해 휴먼 처리되었습니다.')
+                return redirect(url_for('login'))
+
             session['user_id'] = user['id']
             flash('로그인 성공!')
             return redirect(url_for('dashboard'))
         else:
             flash('아이디 또는 비밀번호가 올바르지 않습니다.')
             return redirect(url_for('login'))
+
     return render_template('login.html')
+
 
 # 로그아웃
 @app.route('/logout')
@@ -383,6 +439,70 @@ def admin_reports():
 
     return render_template('admin_reports.html', reports=reports)
 
+# 유저 신고 필터링
+@app.route('/admin/user_reports')
+def admin_user_reports():
+    if 'user_id' not in session or not is_admin():
+        flash('관리자만 접근할 수 있습니다.')
+        return redirect(url_for('dashboard'))
+
+    db = get_db()
+    cursor = db.cursor()
+
+    cursor.execute("""
+        SELECT r.id AS report_id, r.reason, r.target_id AS user_id,
+               u.username, u.is_suspended
+        FROM report r
+        JOIN user u ON r.target_id = u.id
+        WHERE r.reason LIKE 'user:%'
+    """)
+    reports = cursor.fetchall()
+
+    return render_template('admin_user_reports.html', reports=reports)
+
+# 휴먼 처리 라우트
+@app.route('/admin/suspend_user/<user_id>', methods=['POST'])
+def suspend_user(user_id):
+    if 'user_id' not in session or not is_admin():
+        flash('관리자 권한이 필요합니다.')
+        return redirect(url_for('dashboard'))
+
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("UPDATE user SET is_suspended = 1 WHERE id = ?", (user_id,))
+    db.commit()
+
+    flash('해당 유저가 휴먼 처리되었습니다.')
+    return redirect(url_for('admin_user_reports'))
+
+# 휴먼 유저 목록 조회
+@app.route('/admin/suspended_users')
+def suspended_users():
+    if 'user_id' not in session or not is_admin():
+        flash('관리자 권한이 필요합니다.')
+        return redirect(url_for('dashboard'))
+
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("SELECT id, username FROM user WHERE is_suspended = 1")
+    users = cursor.fetchall()
+
+    return render_template('suspended_users.html', users=users)
+
+# 휴먼 유저 복구
+@app.route('/admin/unsuspend_user/<user_id>', methods=['POST'])
+def unsuspend_user(user_id):
+    if 'user_id' not in session or not is_admin():
+        flash('관리자 권한이 필요합니다.')
+        return redirect(url_for('dashboard'))
+
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("UPDATE user SET is_suspended = 0 WHERE id = ?", (user_id,))
+    db.commit()
+
+    flash('유저가 복구되었습니다.')
+    return redirect(url_for('suspended_users'))
 
 # 불량 상품 삭제
 @app.route('/admin/delete_product/<product_id>', methods=['POST'])

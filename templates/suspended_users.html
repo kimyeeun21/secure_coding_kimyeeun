@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}휴먼 처리된 유저 목록{% endblock %}
+{% block content %}
+<h2>휴먼 처리된 유저 목록</h2>
+
+{% if users %}
+  <ul>
+    {% for user in users %}
+      <li style="margin-bottom: 15px;">
+        {{ user.username }}
+        <form action="{{ url_for('unsuspend_user', user_id=user.id) }}" method="POST" style="display:inline;">
+          <button type="submit" onclick="return confirm('정말 복구하시겠습니까?')">복구하기</button>
+        </form>
+      </li>
+    {% endfor %}
+  </ul>
+{% else %}
+  <p>휴먼 처리된 유저가 없습니다.</p>
+{% endif %}
+{% endblock %}

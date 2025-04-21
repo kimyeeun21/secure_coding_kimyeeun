@@ -6,10 +6,23 @@
   {% for u in users %}
     <li>
       {{ u.username }}
-      <form action="{{ url_for('private_chat', receiver_id=u.id) }}" method="get" style="display:inline;">
-        <button type="submit" style="padding: 4px 8px; font-size: 0.8em; background-color: #4a90e2; color: white; 
-                                    border: none; border-radius: 4px; cursor: pointer; width: auto;">
-          채팅하기
+
+      <!-- 신고하기 버튼 -->
+      <form action="{{ url_for('report') }}" method="POST" style="display:inline;">
+        <input type="hidden" name="type" value="user">
+        <input type="hidden" name="target_id" value="{{ u.id }}">
+        <input type="hidden" name="reason" value="거짓말함">
+        <button type="submit" style="padding: 4px 8px; font-size: 0.8em; background-color: #e94e4e; color: white; 
+                                      border: none; border-radius: 4px; cursor: pointer; width: auto;">
+          신고하기
+        </button>
+      </form>
+
+      <!-- 송금하기 버튼 -->
+      <form action="{{ url_for('send_money', receiver_id=u.id) }}" method="get" style="display:inline;">
+        <button type="submit" style="padding: 4px 8px; font-size: 0.8em; background-color: green; color: white;
+                                      border: none; border-radius: 4px; cursor: pointer; width: auto;">
+          송금하기
         </button>
       </form>
     </li>

@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}신고된 유저 목록{% endblock %}
+{% block content %}
+
+<h2>신고된 유저 목록</h2>
+
+{% if reports %}
+  <ul>
+    {% for report in reports %}
+      <li style="margin-bottom: 20px;">
+        <strong>유저 이름:</strong> {{ report.username }}<br>
+        <strong>신고 사유:</strong> {{ report.reason }}<br>
+
+        {% if report.is_suspended %}
+          <p style="color: red;">(현재 휴먼 상태입니다)</p>
+          <form method="POST" action="{{ url_for('unsuspend_user', user_id=report.user_id) }}">
+         <button type="submit" onclick="return confirm('해당 유저의 휴먼을 해제하시겠습니까?')">휴먼 해제하기</button>
+         </form>
+        {% else %}
+          <form method="POST" action="{{ url_for('suspend_user', user_id=report.user_id) }}">
+          <button type="submit" onclick="return confirm('해당 유저를 휴먼 처리하시겠습니까?')">휴먼 처리하기</button>
+          </form>
+        {% endif %}
+        <hr>
+      </li>
+    {% endfor %}
+  </ul>
+{% else %}
+  <p>신고된 유저가 없습니다.</p>
+{% endif %}
+
+{% endblock %}
