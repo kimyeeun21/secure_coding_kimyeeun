@@ -115,15 +115,27 @@ def send_money(receiver_id):
     if request.method == 'POST':
         amount = int(request.form['amount'])
 
+        # 송금 전 잔액 확인
+        cursor.execute("SELECT balance FROM user WHERE id = ?", (sender_id,))
+        sender = cursor.fetchone()
+        if sender['balance'] < amount:
+            flash("잔액이 부족합니다.")
+            return redirect(url_for('send_money', receiver_id=receiver_id))
+
+        # 송금 처리
         transfer_id = str(uuid.uuid4())
         cursor.execute(
             "INSERT INTO transfer (id, sender_id, receiver_id, amount) VALUES (?, ?, ?, ?)",
             (transfer_id, sender_id, receiver_id, amount)
         )
+        cursor.execute("UPDATE user SET balance = balance - ? WHERE id = ?", (amount, sender_id))
+        cursor.execute("UPDATE user SET balance = balance + ? WHERE id = ?", (amount, receiver_id))
         db.commit()
+
         flash(f"{receiver['username']}님에게 {amount}원을 송금했습니다.")
         return redirect(url_for('user_list'))
 
+    # GET 요청 시: 송금 페이지 렌더링
     return render_template('send_money.html', receiver=receiver)
 
 
