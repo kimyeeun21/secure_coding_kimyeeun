@@ -94,6 +94,9 @@
     {% if user and user.is_admin %}
       <a href="{{ url_for('admin_reports') }}">상품 신고 관리</a>
       <a href="{{ url_for('admin_user_reports') }}">유저 신고 관리</a>
+    {% if user and user.is_admin %}
+      <a href="{{ url_for('admin_panel') }}">관리자 홈</a>  
+    {% endif %}
     {% endif %}
     <a href="{{ url_for('logout') }}">로그아웃</a>
   </nav>

@@ -87,6 +87,85 @@ def init_db():
         """)
         db.commit()
 
+# 거래내역 페이지
+@app.route('/transactions')
+def transaction_history():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("""
+        SELECT t.*, u.username AS receiver_name
+        FROM transfer t
+        JOIN user u ON t.receiver_id = u.id
+        WHERE t.sender_id = ?
+        ORDER BY timestamp DESC
+    """, (session['user_id'],))
+    sent_transactions = cursor.fetchall()
+
+    cursor.execute("""
+        SELECT t.*, u.username AS sender_name
+        FROM transfer t
+        JOIN user u ON t.sender_id = u.id
+        WHERE t.receiver_id = ?
+        ORDER BY timestamp DESC
+    """, (session['user_id'],))
+    received_transactions = cursor.fetchall()
+
+    return render_template('transactions.html', sent_transactions=sent_transactions, received_transactions=received_transactions)
+
+# 관리자 홈
+@app.route('/admin')
+def admin_panel():
+    if 'user_id' not in session or not is_admin():
+        flash("관리자 권한이 필요합니다.")
+        return redirect(url_for('dashboard'))
+    return render_template('admin_panel.html')
+
+# 사용자 관리 페이지
+@app.route('/admin/manage_users')
+def manage_users():
+    if 'user_id' not in session or not is_admin():
+        flash("관리자 권한이 필요합니다.")
+        return redirect(url_for('dashboard'))
+
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("SELECT * FROM user")
+    users = cursor.fetchall()
+    return render_template('admin_manage_users.html', users=users)
+
+# 상품 신고 관리 페이지 (기존 admin_reports 재활용 가능)
+@app.route('/admin/manage_reports')
+def manage_reports():
+    return redirect(url_for('admin_reports'))
+
+# 유저 신고 관리 페이지 (기존 admin_user_reports 재활용 가능)
+@app.route('/admin/manage_user_reports')
+def manage_user_reports():
+    return redirect(url_for('admin_user_reports'))
+
+# 송금 관리 페이지
+@app.route('/admin/manage_transfers')
+def manage_transfers():
+    if 'user_id' not in session or not is_admin():
+        flash("관리자 권한이 필요합니다.")
+        return redirect(url_for('dashboard'))
+
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("""
+        SELECT t.*, su.username AS sender_name, ru.username AS receiver_name
+        FROM transfer t
+        JOIN user su ON t.sender_id = su.id
+        JOIN user ru ON t.receiver_id = ru.id
+        ORDER BY t.timestamp DESC
+    """)
+    transfers = cursor.fetchall()
+    return render_template('admin_manage_transfers.html', transfers=transfers)
+
+
 # 관리자 여부 확인 함수
 def is_admin():
     db = get_db()
