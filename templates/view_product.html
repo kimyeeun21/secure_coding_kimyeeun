@@ -23,7 +23,6 @@
     </form>
   </div>
 {% else %}
-
   <!-- 상품 신고 버튼 -->
   <form action="{{ url_for('report') }}" method="POST" style="margin-top: 20px;">
     <input type="hidden" name="target_id" value="{{ product.id }}">
@@ -33,4 +32,5 @@
     </button>
   </form>
 {% endif %}
+
 {% endblock %}
