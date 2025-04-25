@@ -1,13 +1,26 @@
 import sqlite3
 import uuid
 import bcrypt
+import time
 from flask import Flask, render_template, request, redirect, url_for, session, flash, g
 from flask_socketio import SocketIO, send
 
 app = Flask(__name__)
+app.config['SESSION_COOKIE_HTTPONLY'] = True   # 자바스크립트로 세션쿠키 접근 불가 (XSS 방어)
+app.config['SESSION_COOKIE_SECURE'] = True     # HTTPS 환경에서만 세션 쿠키 전송 (HTTPS 적용 시 필요)
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'  # 교차사이트 요청 제한 (CSRF에 도움됨)
 app.config['SECRET_KEY'] = 'secret!'
 DATABASE = 'market.db'
 socketio = SocketIO(app)
+
+import logging
+
+# 로그 파일 설정
+logging.basicConfig(
+    filename='app.log',
+    level=logging.INFO,
+    format='%(asctime)s [%(levelname)s] %(message)s'
+)
 
 # 데이터베이스 연결 관리: 요청마다 연결 생성 후 사용, 종료 시 close
 def get_db():
@@ -229,9 +242,21 @@ def index():
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        username = request.form['username']
+        username = request.form['username'].strip()
         password = request.form['password']
-        hashed_pw = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()) # 비밀번호 해시해서 저장장
+
+        # 서버측 입력 검증
+        import re
+        if not re.match(r'^[a-zA-Z0-9_]{3,20}$', username):
+            flash('아이디는 3~20자의 영문자, 숫자, 밑줄(_)만 가능합니다.')
+            return redirect(url_for('register'))
+
+        if len(password) < 6:
+            flash('비밀번호는 최소 6자 이상이어야 합니다.')
+            return redirect(url_for('register'))
+
+        # 비밀번호 해시
+        hashed_pw = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
 
         db = get_db()
         cursor = db.cursor()
@@ -246,14 +271,29 @@ def register():
         db.commit()
         flash('회원가입이 완료되었습니다. 로그인 해주세요.')
         return redirect(url_for('login'))
+
     return render_template('register.html')
 
-# 로그인
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
+
+        # 로그인 실패 횟수 및 차단시간 관리
+        if 'login_attempts' not in session:
+            session['login_attempts'] = 0
+            session['lockout_time'] = 0
+
+        # 로그인 시도 제한 확인
+        if session['login_attempts'] >= 5:
+            remaining = session['lockout_time'] - time.time()
+            if remaining > 0:
+                flash(f"너무 많은 로그인 시도로 인해 잠시 차단되었습니다. {int(remaining)}초 후에 다시 시도해주세요.")
+                return redirect(url_for('login'))
+            else:
+                session['login_attempts'] = 0
+                session['lockout_time'] = 0
 
         db = get_db()
         cursor = db.cursor()
@@ -261,15 +301,22 @@ def login():
         user = cursor.fetchone()
 
         if user and bcrypt.checkpw(password.encode('utf-8'), user['password']):
-            if user['is_suspended']:  # 휴먼처리 
+            if user['is_suspended']:  # 휴먼 처리 확인
                 flash('이 계정은 관리자에 의해 휴먼 처리되었습니다.')
                 return redirect(url_for('login'))
 
             session['user_id'] = user['id']
+            session.pop('login_attempts', None)  # 성공 시 실패횟수 초기화
+            session.pop('lockout_time', None)
             flash('로그인 성공!')
             return redirect(url_for('dashboard'))
         else:
-            flash('아이디 또는 비밀번호가 올바르지 않습니다.')
+            session['login_attempts'] += 1
+            if session['login_attempts'] >= 5:
+                session['lockout_time'] = time.time() + 60  # 60초 차단
+                flash('로그인 5회 이상 실패. 1분간 로그인 시도할 수 없습니다.')
+            else:
+                flash('아이디 또는 비밀번호가 올바르지 않습니다.')
             return redirect(url_for('login'))
 
     return render_template('login.html')
@@ -453,10 +500,35 @@ def user_list():
 def new_product():
     if 'user_id' not in session:
         return redirect(url_for('login'))
+
     if request.method == 'POST':
-        title = request.form['title']
-        description = request.form['description']
-        price = request.form['price']
+        import html
+        import re
+
+        title = request.form['title'].strip()
+        description = request.form['description'].strip()
+        price = request.form['price'].strip()
+
+        # 서버측 입력 검증
+
+        # 1. 제목 길이
+        if len(title) < 3 or len(title) > 100:
+            flash('제목은 3~100자 사이여야 합니다.')
+            return redirect(url_for('new_product'))
+
+        # 2. 가격 숫자 여부
+        if not price.isdigit() or int(price) <= 0:
+            flash('가격은 양의 숫자여야 합니다.')
+            return redirect(url_for('new_product'))
+
+        # 3. XSS 방지 (description)
+        def strip_tags(text):
+            return re.sub(r'<[^>]+>', '', text)
+
+        title = html.escape(strip_tags(title))
+        description = html.escape(strip_tags(description))
+
+        # 4. DB 저장
         db = get_db()
         cursor = db.cursor()
         product_id = str(uuid.uuid4())
@@ -467,7 +539,10 @@ def new_product():
         db.commit()
         flash('상품이 등록되었습니다.')
         return redirect(url_for('dashboard'))
+
     return render_template('new_product.html')
+
+
 
 # 상품 상세보기
 @app.route('/product/<product_id>')
@@ -652,33 +727,64 @@ def private_chat(receiver_id):
 @app.route('/report', methods=['GET', 'POST'])
 def report():
     if 'user_id' not in session:
+        flash('로그인이 필요한 기능입니다.')
         return redirect(url_for('login'))
 
     if request.method == 'POST':
-        report_type = request.form['type']
-        target_id = request.form['target_id']
-        reason = request.form['reason']
+        report_type = request.form.get('type', '').strip()
+        target_id = request.form.get('target_id', '').strip()
+        reason = request.form.get('reason', '').strip()
+
+        # 서버 측 입력 유효성 검증
+        if report_type not in ['user', 'product']:
+            flash('올바르지 않은 신고 유형입니다.')
+            return redirect(url_for('dashboard'))
+
+        if not target_id or not re.match(r'^[a-f0-9-]{36}$', target_id):
+            flash('올바르지 않은 대상 ID입니다.')
+            return redirect(url_for('dashboard'))
+
+        if len(reason) < 2 or len(reason) > 100:
+            flash('신고 사유는 2~100자 사이여야 합니다.')
+            return redirect(url_for('dashboard'))
+
+        report_id = str(uuid.uuid4())
         db = get_db()
         cursor = db.cursor()
-        report_id = str(uuid.uuid4())
-
         cursor.execute(
             "INSERT INTO report (id, reporter_id, target_id, reason) VALUES (?, ?, ?, ?)",
             (report_id, session['user_id'], target_id, f"{report_type}:{reason}")
         )
         db.commit()
+
+        # 로그 남기기
+        logging.info(f"신고 접수: type={report_type}, reporter={session['user_id']}, target={target_id}, reason={reason}")
+
         flash('신고가 접수되었습니다.')
         return redirect(url_for('dashboard'))
 
     return render_template('report.html')
 
+# 유저별 마지막 메시지 전송 시간을 저장하는 딕셔너리
+last_message_time = {}
 
 # 실시간 채팅: 클라이언트가 메시지를 보내면 전체 브로드캐스트
 @socketio.on('send_message')
 def handle_send_message_event(data):
+    user_id = data.get('user_id')  # 클라이언트에서 함께 보내야 함
+    now = time.time()
+    RATE_LIMIT_INTERVAL = 3  # 제한 간격 (초)
+
+    if user_id:
+        last_time = last_message_time.get(user_id, 0)
+        if now - last_time < RATE_LIMIT_INTERVAL:
+            send({'error': '메시지를 너무 자주 보낼 수 없습니다.'}, to=request.sid)
+            return
+        last_message_time[user_id] = now
+
     data['message_id'] = str(uuid.uuid4())
     send(data, broadcast=True)
 
 if __name__ == '__main__':
-    init_db()  # 앱 컨텍스트 내에서 테이블 생성
+    init_db()
     socketio.run(app, debug=True)
