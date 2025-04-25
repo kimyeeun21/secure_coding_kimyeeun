@@ -86,16 +86,19 @@
   </style>
 </head>
 <body>
-  <nav>
-    {% if session.get('user_id') %}
-      <a href="{{ url_for('dashboard') }}">대시보드</a>
-      <a href="{{ url_for('profile') }}">프로필</a>
-      <a href="{{ url_for('report') }}">신고하기</a>
-      <a href="{{ url_for('logout') }}">로그아웃</a>
-    {% else %}
-      <a href="{{ url_for('login') }}">로그인</a>
-      <a href="{{ url_for('register') }}">회원가입</a>
+  <nav style="display: flex; gap: 20px; padding: 10px;">
+    <a href="{{ url_for('dashboard') }}">대시보드</a>
+    <a href="{{ url_for('profile') }}">프로필</a>
+    <a href="{{ url_for('user_list') }}">사용자 목록 보기</a>
+    <a href="{{ url_for('report') }}">신고하기</a>
+    {% if user and user.is_admin %}
+      <a href="{{ url_for('admin_reports') }}">상품 신고 관리</a>
+      <a href="{{ url_for('admin_user_reports') }}">유저 신고 관리</a>
+    {% if user and user.is_admin %}
+      <a href="{{ url_for('admin_panel') }}">관리자 홈</a>  
     {% endif %}
+    {% endif %}
+    <a href="{{ url_for('logout') }}">로그아웃</a>
   </nav>
   <div class="container">
     {% with messages = get_flashed_messages() %}

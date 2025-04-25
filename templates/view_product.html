@@ -5,6 +5,7 @@
 <p>{{ product.description }}</p>
 <p>가격: {{ product.price }}</p>
 <p>판매자: {{ seller.username if seller else '알 수 없음' }}</p>
+
 {% if user.id == product.seller_id %}
   <div style="margin-top: 20px; display: flex; gap: 10px;">
     <!-- 수정 버튼 -->
@@ -21,5 +22,15 @@
       </button>
     </form>
   </div>
+{% else %}
+  <!-- 상품 신고 버튼 -->
+  <form action="{{ url_for('report') }}" method="POST" style="margin-top: 20px;">
+    <input type="hidden" name="target_id" value="{{ product.id }}">
+    <input type="hidden" name="reason" value="product:불량품">
+    <button type="submit" style="padding: 10px 15px; background-color: crimson; color: white; border: none; border-radius: 5px; cursor: pointer;">
+      상품 신고하기
+    </button>
+  </form>
 {% endif %}
+
 {% endblock %}

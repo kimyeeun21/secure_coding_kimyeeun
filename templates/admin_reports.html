@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}신고된 상품 목록{% endblock %}
+{% block content %}
+
+<div style="max-width: 700px; margin: auto; background: #fff; padding: 20px; border-radius: 12px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);">
+  <h2 style="margin-bottom: 20px;">신고된 상품 목록</h2>
+
+  {% if reports %}
+    <ul style="list-style: none; padding: 0;">
+      {% for report in reports %}
+        <li style="margin-bottom: 20px; padding: 15px; border: 1px solid #eee; border-radius: 8px;">
+          <p><strong>상품 제목:</strong> {{ report.title }}</p>
+          <p><strong>신고 사유:</strong> {{ report.reason }}</p>
+
+          <form method="POST" action="{{ url_for('delete_reported_product', product_id=report.product_id) }}" 
+                style="margin-top: 10px;">
+            <button type="submit"
+                    onclick="return confirm('정말 삭제하시겠습니까?')"
+                    style="padding: 8px 12px; background-color: #e74c3c; color: white; border: none; 
+                    border-radius: 4px; cursor: pointer;">
+              상품 삭제하기
+            </button>
+          </form>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <p style="text-align: center;">신고된 상품이 없습니다.</p>
+  {% endif %}
+</div>
+
+{% endblock %}

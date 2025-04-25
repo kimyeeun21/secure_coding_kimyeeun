@@ -1,0 +1,78 @@
+2025-04-25 18:36:46,213 [INFO] [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2025-04-25 18:36:46,214 [INFO] [33mPress CTRL+C to quit[0m
+2025-04-25 18:36:46,214 [INFO]  * Restarting with stat
+2025-04-25 18:36:47,088 [WARNING]  * Debugger is active!
+2025-04-25 18:36:47,112 [INFO]  * Debugger PIN: 907-486-680
+2025-04-25 18:37:20,144 [INFO] [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2025-04-25 18:37:20,145 [INFO] [33mPress CTRL+C to quit[0m
+2025-04-25 18:37:20,145 [INFO]  * Restarting with stat
+2025-04-25 18:37:20,926 [WARNING]  * Debugger is active!
+2025-04-25 18:37:20,942 [INFO]  * Debugger PIN: 907-486-680
+2025-04-25 18:41:25,989 [INFO] [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2025-04-25 18:41:25,989 [INFO] [33mPress CTRL+C to quit[0m
+2025-04-25 18:41:25,989 [INFO]  * Restarting with stat
+2025-04-25 18:41:26,749 [WARNING]  * Debugger is active!
+2025-04-25 18:41:26,764 [INFO]  * Debugger PIN: 907-486-680
+2025-04-25 18:41:30,640 [INFO] 127.0.0.1 - - [25/Apr/2025 18:41:30] "GET / HTTP/1.1" 200 -
+2025-04-25 18:41:30,798 [INFO] 127.0.0.1 - - [25/Apr/2025 18:41:30] "[33mGET /favicon.ico HTTP/1.1[0m" 404 -
+2025-04-25 18:41:46,443 [INFO] 127.0.0.1 - - [25/Apr/2025 18:41:46] "[32mGET /logout HTTP/1.1[0m" 302 -
+2025-04-25 18:41:46,756 [INFO] 127.0.0.1 - - [25/Apr/2025 18:41:46] "GET / HTTP/1.1" 200 -
+2025-04-25 18:41:48,260 [INFO] 127.0.0.1 - - [25/Apr/2025 18:41:48] "GET /register HTTP/1.1" 200 -
+2025-04-25 18:41:59,984 [INFO] 127.0.0.1 - - [25/Apr/2025 18:41:59] "[32mPOST /register HTTP/1.1[0m" 302 -
+2025-04-25 18:41:59,996 [INFO] 127.0.0.1 - - [25/Apr/2025 18:41:59] "GET /register HTTP/1.1" 200 -
+2025-04-25 18:43:15,875 [INFO] 127.0.0.1 - - [25/Apr/2025 18:43:15] "[32mPOST /register HTTP/1.1[0m" 302 -
+2025-04-25 18:43:15,902 [INFO] 127.0.0.1 - - [25/Apr/2025 18:43:15] "GET /login HTTP/1.1" 200 -
+2025-04-25 18:46:01,571 [INFO] [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2025-04-25 18:46:01,571 [INFO] [33mPress CTRL+C to quit[0m
+2025-04-25 18:46:01,571 [INFO]  * Restarting with stat
+2025-04-25 18:46:02,312 [WARNING]  * Debugger is active!
+2025-04-25 18:46:02,330 [INFO]  * Debugger PIN: 907-486-680
+2025-04-25 18:46:13,277 [INFO] 127.0.0.1 - - [25/Apr/2025 18:46:13] "[32mPOST /login HTTP/1.1[0m" 302 -
+2025-04-25 18:46:13,292 [INFO] 127.0.0.1 - - [25/Apr/2025 18:46:13] "GET /login HTTP/1.1" 200 -
+2025-04-25 18:46:18,180 [INFO] 127.0.0.1 - - [25/Apr/2025 18:46:18] "[32mPOST /login HTTP/1.1[0m" 302 -
+2025-04-25 18:46:18,250 [INFO] 127.0.0.1 - - [25/Apr/2025 18:46:18] "GET /login HTTP/1.1" 200 -
+2025-04-25 18:46:20,919 [INFO] 127.0.0.1 - - [25/Apr/2025 18:46:20] "[32mPOST /login HTTP/1.1[0m" 302 -
+2025-04-25 18:46:20,924 [INFO] 127.0.0.1 - - [25/Apr/2025 18:46:20] "GET /login HTTP/1.1" 200 -
+2025-04-25 18:46:23,214 [INFO] 127.0.0.1 - - [25/Apr/2025 18:46:23] "[32mPOST /login HTTP/1.1[0m" 302 -
+2025-04-25 18:46:23,529 [INFO] 127.0.0.1 - - [25/Apr/2025 18:46:23] "GET /login HTTP/1.1" 200 -
+2025-04-25 18:46:26,160 [INFO] 127.0.0.1 - - [25/Apr/2025 18:46:26] "[32mPOST /login HTTP/1.1[0m" 302 -
+2025-04-25 18:46:26,166 [INFO] 127.0.0.1 - - [25/Apr/2025 18:46:26] "GET /login HTTP/1.1" 200 -
+2025-04-25 18:47:32,271 [INFO] 127.0.0.1 - - [25/Apr/2025 18:47:32] "[32mGET /dashboard HTTP/1.1[0m" 302 -
+2025-04-25 18:47:32,377 [INFO] 127.0.0.1 - - [25/Apr/2025 18:47:32] "GET /login HTTP/1.1" 200 -
+2025-04-25 18:47:39,340 [INFO] 127.0.0.1 - - [25/Apr/2025 18:47:39] "[32mPOST /login HTTP/1.1[0m" 302 -
+2025-04-25 18:47:39,346 [INFO] 127.0.0.1 - - [25/Apr/2025 18:47:39] "GET /login HTTP/1.1" 200 -
+2025-04-25 18:47:45,065 [INFO] 127.0.0.1 - - [25/Apr/2025 18:47:45] "[32mPOST /login HTTP/1.1[0m" 302 -
+2025-04-25 18:47:45,156 [INFO] 127.0.0.1 - - [25/Apr/2025 18:47:45] "GET /dashboard HTTP/1.1" 200 -
+2025-04-25 18:47:45,268 [INFO] 127.0.0.1 - - [25/Apr/2025 18:47:45] "GET /socket.io/?EIO=4&transport=polling&t=PPiM8wf HTTP/1.1" 200 -
+2025-04-25 18:47:45,596 [INFO] 127.0.0.1 - - [25/Apr/2025 18:47:45] "POST /socket.io/?EIO=4&transport=polling&t=PPiM8xz&sid=DC8Ku58nP0tiQyUxAAAA HTTP/1.1" 200 -
+2025-04-25 18:47:45,597 [INFO] 127.0.0.1 - - [25/Apr/2025 18:47:45] "GET /socket.io/?EIO=4&transport=polling&t=PPiM8y2&sid=DC8Ku58nP0tiQyUxAAAA HTTP/1.1" 200 -
+2025-04-25 18:47:45,858 [INFO] 127.0.0.1 - - [25/Apr/2025 18:47:45] "GET /socket.io/?EIO=4&transport=polling&t=PPiM912&sid=DC8Ku58nP0tiQyUxAAAA HTTP/1.1" 200 -
+2025-04-25 18:47:48,550 [INFO] 127.0.0.1 - - [25/Apr/2025 18:47:48] "GET /socket.io/?EIO=4&transport=websocket&sid=DC8Ku58nP0tiQyUxAAAA HTTP/1.1" 200 -
+2025-04-25 18:47:48,634 [INFO] 127.0.0.1 - - [25/Apr/2025 18:47:48] "GET /product/new HTTP/1.1" 200 -
+2025-04-25 18:48:06,233 [INFO] 127.0.0.1 - - [25/Apr/2025 18:48:06] "[32mPOST /product/new HTTP/1.1[0m" 302 -
+2025-04-25 18:48:06,552 [INFO] 127.0.0.1 - - [25/Apr/2025 18:48:06] "GET /product/new HTTP/1.1" 200 -
+2025-04-25 18:48:36,741 [INFO] 127.0.0.1 - - [25/Apr/2025 18:48:36] "[32mPOST /product/new HTTP/1.1[0m" 302 -
+2025-04-25 18:48:36,755 [INFO] 127.0.0.1 - - [25/Apr/2025 18:48:36] "GET /dashboard HTTP/1.1" 200 -
+2025-04-25 18:48:37,001 [INFO] 127.0.0.1 - - [25/Apr/2025 18:48:37] "GET /socket.io/?EIO=4&transport=polling&t=PPiMLWc HTTP/1.1" 200 -
+2025-04-25 18:48:37,321 [INFO] 127.0.0.1 - - [25/Apr/2025 18:48:37] "POST /socket.io/?EIO=4&transport=polling&t=PPiMLaE&sid=JZTq2TN7iA2ouRBlAAAC HTTP/1.1" 200 -
+2025-04-25 18:48:37,323 [INFO] 127.0.0.1 - - [25/Apr/2025 18:48:37] "GET /socket.io/?EIO=4&transport=polling&t=PPiMLaF&sid=JZTq2TN7iA2ouRBlAAAC HTTP/1.1" 200 -
+2025-04-25 18:48:40,448 [INFO] 127.0.0.1 - - [25/Apr/2025 18:48:40] "GET /socket.io/?EIO=4&transport=websocket&sid=JZTq2TN7iA2ouRBlAAAC HTTP/1.1" 200 -
+2025-04-25 18:48:40,507 [INFO] 127.0.0.1 - - [25/Apr/2025 18:48:40] "GET /product/f66252b1-5f2b-4c13-a3d9-dadabab903ae HTTP/1.1" 200 -
+2025-04-25 18:48:47,488 [INFO] 127.0.0.1 - - [25/Apr/2025 18:48:47] "GET /product/new HTTP/1.1" 200 -
+2025-04-25 18:51:13,539 [INFO] 127.0.0.1 - - [25/Apr/2025 18:51:13] "GET /dashboard HTTP/1.1" 200 -
+2025-04-25 18:51:13,613 [INFO] 127.0.0.1 - - [25/Apr/2025 18:51:13] "GET /socket.io/?EIO=4&transport=polling&t=PPiMxoA HTTP/1.1" 200 -
+2025-04-25 18:51:13,793 [INFO] 127.0.0.1 - - [25/Apr/2025 18:51:13] "POST /socket.io/?EIO=4&transport=polling&t=PPiMxpF&sid=EHad6v2xW0190QUBAAAE HTTP/1.1" 200 -
+2025-04-25 18:51:13,931 [INFO] 127.0.0.1 - - [25/Apr/2025 18:51:13] "GET /socket.io/?EIO=4&transport=polling&t=PPiMxpF.0&sid=EHad6v2xW0190QUBAAAE HTTP/1.1" 200 -
+2025-04-25 18:51:13,935 [INFO] 127.0.0.1 - - [25/Apr/2025 18:51:13] "GET /socket.io/?EIO=4&transport=polling&t=PPiMxuE&sid=EHad6v2xW0190QUBAAAE HTTP/1.1" 200 -
+2025-04-25 18:51:42,024 [INFO] 127.0.0.1 - - [25/Apr/2025 18:51:42] "GET /socket.io/?EIO=4&transport=websocket&sid=EHad6v2xW0190QUBAAAE HTTP/1.1" 200 -
+2025-04-25 18:51:42,243 [INFO] 127.0.0.1 - - [25/Apr/2025 18:51:42] "[32mGET /logout HTTP/1.1[0m" 302 -
+2025-04-25 18:51:42,351 [INFO] 127.0.0.1 - - [25/Apr/2025 18:51:42] "GET / HTTP/1.1" 200 -
+2025-04-25 18:51:50,615 [INFO] 127.0.0.1 - - [25/Apr/2025 18:51:50] "[32mGET /report HTTP/1.1[0m" 302 -
+2025-04-25 18:51:50,921 [INFO] 127.0.0.1 - - [25/Apr/2025 18:51:50] "GET /login HTTP/1.1" 200 -
+2025-04-25 18:51:59,273 [INFO] 127.0.0.1 - - [25/Apr/2025 18:51:59] "[33mGET /send_money HTTP/1.1[0m" 404 -
+2025-04-25 18:52:07,930 [INFO] 127.0.0.1 - - [25/Apr/2025 18:52:07] "[32mGET /report HTTP/1.1[0m" 302 -
+2025-04-25 18:52:07,935 [INFO] 127.0.0.1 - - [25/Apr/2025 18:52:07] "GET /login HTTP/1.1" 200 -

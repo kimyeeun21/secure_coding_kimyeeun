@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}유저 관리{% endblock %}
+{% block content %}
+<h2>유저 관리</h2>
+
+<ul>
+  {% for u in users %}
+    <li>
+      {{ u.username }}
+      {% if u.is_suspended %}
+        (휴먼됨)
+        <form action="{{ url_for('unsuspend_user', user_id=u.id) }}" method="POST" style="display:inline;">
+          <button type="submit">해제</button>
+        </form>
+      {% else %}
+        <form action="{{ url_for('suspend_user', user_id=u.id) }}" method="POST" style="display:inline;">
+          <button type="submit">휴먼 처리</button>
+        </form>
+      {% endif %}
+    </li>
+  {% endfor %}
+</ul>
+
+<a href="{{ url_for('admin_home') }}">← 관리자 메뉴로 돌아가기</a>
+{% endblock %}

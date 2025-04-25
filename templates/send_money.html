@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}송금하기{% endblock %}
+{% block content %}
+<h2>송금하기</h2>
+
+<p><strong>받는 사람:</strong> {{ receiver.username }}</p>
+
+<form method="POST">
+  <label for="amount">송금할 금액:</label><br>
+  <input type="number" id="amount" name="amount" min="1" required><br>
+  <button type="submit">송금</button>
+</form>
+
+<p><a href="{{ url_for('user_list') }}">← 사용자 목록으로 돌아가기</a></p>
+{% endblock %}

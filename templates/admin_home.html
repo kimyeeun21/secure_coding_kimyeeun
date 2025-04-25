@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}관리자 메뉴{% endblock %}
+{% block content %}
+<h2>🔧 관리자 메뉴</h2>
+<ul>
+  <li><a href="{{ url_for('admin_user_reports') }}">신고된 유저 관리</a></li>
+  <li><a href="{{ url_for('suspended_users') }}">휴먼 유저 관리</a></li>
+  <li><a href="{{ url_for('admin_users') }}">전체 유저 관리</a></li>
+</ul>
+{% endblock %}
